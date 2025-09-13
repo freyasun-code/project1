@@ -74,6 +74,8 @@
       font-size: 18px;
     }
   </style>
+  <!-- MathJax 支持公式渲染 -->
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
   <!-- 导航栏 -->
@@ -93,16 +95,21 @@
       <h2>Part1: Single-scale alignment</h2>
       <h3>Method</h3>
       <p>
-        For the exhaustive single-scale approach, I started by reading in the image and converting it to a double. 
-        The pixel values are normalized and within [0,1]. I then split the image into three equal parts, each representing one color channel (blue, green, and red). 
-        The blue channel is used as the reference channel. For each of the other two channels, I exhaustively search for the best alignment by shifting the channel within a specified range (-15 to +15 pixels in both x and y directions). 
-        In each shift, I use np.roll to translate the moving channel and evaluate alignment only over the true overlapping region so wrapped pixels don’t bias the score. 
-        For each possible shift, I calculated the image matching score between the shifted channel and the reference channel. I implemented both scoring metrics, the L2 norm/euclidean distance and the normalized cross-correlation. 
-        The L2 norm is the default metric, but for emir.tif, since it has strong brightness differences across channels, I switched to NCC and aligned on edge features instead of raw intensities. 
-        NCC is more robust in this case because edges are less affected by cross-channel brightness differences. 
-        The shift that minimizes L2/euclidean distance (or maximizes NCC) is considered the best alignment. 
-        After finding the optimal shifts for both the green and red channels, I combine them with the blue channel to create the final color image.
+        For low-resolution images, I used a single-scale alignment approach. The image was first converted to floating point with pixel values normalized to the range [0,1]. It was then split into three color channels (blue, green, and red). The blue channel served as the reference. 
       </p>
+      <p>
+        For the other two channels, I performed an exhaustive search over a displacement window ([-15, 15] pixels). Each candidate shift was evaluated using <b>Normalized Cross-Correlation (NCC)</b>, defined as:
+      </p>
+      <p style="text-align:center;">
+        $$\text{NCC}(A,B) = \frac{\sum_{x,y} (A(x,y) - \bar{A})(B(x,y) - \bar{B})}{\sqrt{\sum_{x,y}(A(x,y)-\bar{A})^2} \, \sqrt{\sum_{x,y}(B(x,y)-\bar{B})^2}}$$
+      </p>
+      <p>
+        where A and B are the overlapping image regions and \(\bar{A}, \bar{B}\) are their mean values.
+      </p>
+      <p>
+        In each shift, I used <code>np.roll</code> to translate the moving channel. To avoid artifacts from image borders and wrap-around, I applied a <code>crop_interior</code> function to discard a small fraction of the edges before scoring. After determining the optimal displacements for the red and green channels, they were aligned with the blue channel to form the final color image.
+      </p>
+
       <h3>Results</h3>
       <div class="row">
         <div class="img-block">
@@ -121,87 +128,8 @@
     </div>
 
     <!-- Part2 -->
-    <div class="section" id="part2">
-      <h2>Part2: Pyramid alignment</h2>
-      <h3>Method</h3>
-      <p>
-        This part introduces the concept of an image pyramid to speed up the alignment process for larger images. 
-        By creating a multi-scale representation of the images, we can perform alignment at a coarse scale and then refine it at finer scales. 
-        This approach significantly reduces the computational cost while maintaining alignment accuracy.
-      </p>
-      <p>
-        To be more specific, the image is first downsampled by a factor of 2 (with sk.transform.rescale) to create a lower-resolution version, repeatedly applying downsampling until the size is manageable for a exhaustive search. 
-        A search in the lower-resolution space gives us a coarse shift for alignment, which allows us to initialize the finer alignment at a better position. 
-        A finer search is then done starting at the coarsely shifted channels. Therefore, the total shift in this step will be coarse_shift * downsample_factor + fine_shift. 
-        This final calculated shift will serve as the coarse shift for the next level of the pyramid. 
-        The implementation of the method is done by a simple recursion, where the function first downsamples the channels, recurses and get the coarse shift with one fewer level, shifts the channels according to the coarse shift, searches for the fine shift, and finally returns the calculated shift based on both coarse and fine offsets. 
-        The base case is when the passed in num_levels is 1, where a single-scale search is then done to find the shift at the most coarse level.
-      </p>
-      <p>
-        The following images are the results of applying the image pyramid approach to the alignment task on the .tif files, which is much larger than the images in the previous part. 
-        The search range is ±5 pixels with 6 levels of factor-of-2-downsampling. NCC is used for metric. About 10% cropping is done on each side for this part. 
-        For the smaller .jpg images, the multi-scale search is still applied to demonstrate the effectiveness of the approach and fulfill the requirements of the project. 
-        All the .jpg images are processed with a 3-level pyramid of factor 2 downsampling, the search range being ±5 pixels.
-      </p>
-      <h3>Results</h3>
-      <div class="row">
-        <div class="img-block"><img src="church_out.jpg" alt="church" height="180"><p>church<br>G (5,2), R (12,3)</p></div>
-        <div class="img-block"><img src="harvesters_out.jpg" alt="harvesters" height="180"><p>harvesters<br>G (60,17), R (124,13)</p></div>
-        <div class="img-block"><img src="emir_out.jpg" alt="emir" height="180"><p>emir<br>G (49,24), R (107, 40)</p></div>
-        <div class="img-block"><img src="three_generations_out.jpg" alt="three generations" height="180"><p>three_generations<br>G (53,14), R (112,11)</p></div>
-      </div>
-      <div class="row">
-        <div class="img-block"><img src="lastochikino_out.jpg" alt="lastochikino" height="180"><p>lastochikino<br>G (-3,-2), R (75,-9)</p></div>
-        <div class="img-block"><img src="italil_out.jpg" alt="italil" height="180"><p>italil<br>G (38,21), R (76,35)</p></div>
-        <div class="img-block"><img src="icon_out.jpg" alt="icon" height="180"><p>icon<br>G (41,17), R (89,23)</p></div>
-        <div class="img-block"><img src="melons_out.jpg" alt="melons" height="180"><p>melons<br>G (81,10), R (179, 12)</p></div>
-      </div>
-      <div class="row">
-        <div class="img-block"><img src="lugano_out.jpg" alt="lugano" height="180"><p>lugano<br>G (41, -17), R (92, -29)</p></div>
-        <div class="img-block"><img src="self_portrait_out.jpg" alt="self portrait" height="180"><p>self_portrait<br>G (79, 29), R (176, 37)</p></div>
-        <div class="img-block"><img src="siren_out.jpg" alt="siren" height="180"><p>siren<br>G (49, -6), R (96, -25)</p></div>
-      </div>
-    </div>
-
-    <!-- Part3 -->
-    <div class="section" id="part3">
-      <h2>Part3: Results On My Own Images</h2>
-      <h3>Results</h3>
-      <div class="row">
-        <div class="img-block">
-          <img src="train_out.jpg" alt="train result" width="300">
-          <p>train<br>G (41, 2), R (85, 30)</p>
-        </div>
-        <div class="img-block">
-          <img src="master_out.jpg" alt="master result" width="300">
-          <p>master<br>G (38, 11), R (93, 15)</p>
-        </div>
-        <div class="img-block">
-          <img src="field_out.jpg" alt="field result" width="300">
-          <p>field<br>G (32, 5), R (79, 7)</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Part4 -->
-    <div class="section" id="part4">
-      <h2>Part4: Bells & Whistles</h2>
-      <p>
-        Comparing the two images below, the left uses only NCC while the right applies Sobel + NCC. We can see that applying the Sobel operator before alignment often produces more stable and accurate results. The Sobel operator is a simple gradient-based filter commonly used for edge detection. Instead of relying on absolute brightness, it highlights intensity changes, emphasizing structural features like object boundaries and textures while reducing the influence of uneven illumination. As a result, alignment is guided more by the geometry of the scene and becomes less sensitive to exposure differences. 
-      </p>
-      <h3>Comparison</h3>
-      <div class="row">
-        <div class="img-block">
-          <img src="emir_bad_out.jpg" alt="emir bad" height="220">
-          <p>emir_bad</p>
-        </div>
-        <div class="img-block">
-          <img src="emir_out.jpg" alt="emir" height="220">
-          <p>emir_good</p>
-        </div>
-      </div>
-    </div>
-
+    ... （保持你之前的 Part2/Part3/Part4 不变）
   </div>
 </body>
 </html>
+
