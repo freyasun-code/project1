@@ -131,16 +131,27 @@
       <h2>Part2: Pyramid alignment</h2>
       <h3>Method</h3>
       <p>
-        This part introduces the concept of an image pyramid to speed up the alignment process for larger images. 
-        By creating a multi-scale representation of the images, we can perform alignment at a coarse scale and then refine it at finer scales. 
-        This approach significantly reduces the computational cost while maintaining alignment accuracy.
-      </p>
-      <p>
-        To be more specific, the image is first downsampled by a factor of 2 to create a lower-resolution version, repeatedly applying downsampling until the size is manageable for a exhaustive search. 
-        A search in the lower-resolution space gives us a coarse shift for alignment, which allows us to initialize the finer alignment at a better position. 
-        A finer search is then done starting at the coarsely shifted channels. Therefore, the total shift in this step will be coarse_shift * downsample_factor + fine_shift. 
-        The base case is when the passed in num_levels is 1, where a single-scale search is done to find the shift at the most coarse level.
-      </p>
+  To handle the large .tif images, I implemented a <b>coarse-to-fine pyramid alignment</b>.
+  The idea is to build an image pyramid by repeatedly downsampling the original channels by a factor of 2.
+  Before each downsampling step, I applied a <b>Gaussian blur</b> to reduce aliasing artifacts.
+</p>
+
+<p>
+  Alignment starts at the coarsest (smallest) level, where exhaustive search is cheap, and is refined step by step at finer levels.
+  Instead of using a fixed search window, I gradually decreased the search radius across levels: <b>[15, 10, 7, 5, 3]</b> pixels.
+  This allows broad exploration at coarse scales and fine-tuned adjustments at higher resolutions.
+</p>
+
+<p>
+  For similarity measurement, I used <b>Normalized Cross-Correlation (NCC)</b>, which is robust to brightness differences.
+  To reduce boundary artifacts, a <code>crop_interior</code> function removes about 10% from each side before scoring.
+</p>
+
+<p>
+  This pyramid approach greatly improves both speed and accuracy compared to single-scale exhaustive search,
+  making it well-suited for high-resolution glass plate scans.
+</p>
+
       <h3>Results</h3>
       <div class="row">
         <div class="img-block"><img src="church_out.jpg" alt="church" height="180"><p>church<br>G (5,2), R (12,3)</p></div>
