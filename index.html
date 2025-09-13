@@ -187,7 +187,7 @@
     <div class="section" id="part4">
       <h2>Part4: Bells & Whistles</h2>
       <p>
-        The Sobel operator is a simple gradient-based filter commonly used to detect edges in images. It works by convolving the image with small kernels that approximate the derivative in the horizontal and vertical directions, producing maps of edge strength and orientation. Because it focuses on changes in intensity rather than absolute brightness, Sobel emphasizes structural features such as object outlines and textures while suppressing slowly varying background illumination. This is useful for alignment: when we compare edge maps instead of raw intensities, matching is driven by the geometry of the scene (the contours and shapes), which is less sensitive to exposure differences, color shifts, or large uniform borders. In practice, applying the Sobel operator before alignment often yields more stable and accurate registration — especially on historical photos where contrast between channels can vary a lot. The alignment algorithm can then maximize similarity between edge patterns, which improves the chance of finding the correct translation for each channel.
+        Comparing the two images below, the left uses only NCC while the right applies Sobel + NCC. We can see that applying the Sobel operator before alignment often produces more stable and accurate results. The Sobel operator is a simple gradient-based filter commonly used for edge detection. Instead of relying on absolute brightness, it highlights intensity changes, emphasizing structural features like object boundaries and textures while reducing the influence of uneven illumination. As a result, alignment is guided more by the geometry of the scene and becomes less sensitive to exposure differences. 
       </p>
       <h3>Comparison</h3>
       <div class="row">
@@ -197,7 +197,7 @@
         </div>
         <div class="img-block">
           <img src="emir_out.jpg" alt="emir" height="220">
-          <p>emir</p>
+          <p>emir_good</p>
         </div>
       </div>
     </div>
