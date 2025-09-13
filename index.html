@@ -166,13 +166,40 @@
     <!-- Part3 -->
     <div class="section" id="part3">
       <h2>Part3: Results On My Own Images</h2>
-      <!-- 等你补充 -->
+      <h3>Results</h3>
+      <div class="row">
+        <div class="img-block">
+          <img src="train_out.jpg" alt="train result" width="300">
+          <p>train<br>G (41, 2), R (85, 30)</p>
+        </div>
+        <div class="img-block">
+          <img src="master_out.jpg" alt="master result" width="300">
+          <p>master<br>G (38, 11), R (93, 15)</p>
+        </div>
+        <div class="img-block">
+          <img src="field_out.jpg" alt="field result" width="300">
+          <p>field<br>G (32, 5), R (79, 7)</p>
+        </div>
+      </div>
     </div>
 
     <!-- Part4 -->
     <div class="section" id="part4">
       <h2>Part4: Bells & Whistles</h2>
-      <!-- 等你补充 -->
+      <p>
+        The Sobel operator is a simple gradient-based filter commonly used to detect edges in images. It works by convolving the image with small kernels that approximate the derivative in the horizontal and vertical directions, producing maps of edge strength and orientation. Because it focuses on changes in intensity rather than absolute brightness, Sobel emphasizes structural features such as object outlines and textures while suppressing slowly varying background illumination. This is useful for alignment: when we compare edge maps instead of raw intensities, matching is driven by the geometry of the scene (the contours and shapes), which is less sensitive to exposure differences, color shifts, or large uniform borders. In practice, applying the Sobel operator before alignment often yields more stable and accurate registration — especially on historical photos where contrast between channels can vary a lot. The alignment algorithm can then maximize similarity between edge patterns, which improves the chance of finding the correct translation for each channel.
+      </p>
+      <h3>Comparison</h3>
+      <div class="row">
+        <div class="img-block">
+          <img src="emir_bad_out.jpg" alt="emir bad" height="220">
+          <p>emir_bad</p>
+        </div>
+        <div class="img-block">
+          <img src="emir_out.jpg" alt="emir" height="220">
+          <p>emir</p>
+        </div>
+      </div>
     </div>
 
   </div>
