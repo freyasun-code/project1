@@ -64,7 +64,7 @@
     .img-block p {
       margin-top: 8px;
       font-size: 16px;
-      text-align: center; /* 新增：让文字和图片居中对齐 */
+      text-align: center;
     }
     p {
       text-align: left;
@@ -109,7 +109,6 @@
       <p>
         In each shift, I used <code>np.roll</code> to translate the moving channel. To avoid artifacts from image borders and wrap-around, I applied a <code>crop_interior</code> function to discard a small fraction of the edges before scoring. After determining the optimal displacements for the red and green channels, they were aligned with the blue channel to form the final color image.
       </p>
-
       <h3>Results</h3>
       <div class="row">
         <div class="img-block">
@@ -118,7 +117,7 @@
         </div>
         <div class="img-block">
           <img src="monastery_out.jpg" alt="monastery result" width="300">
-          <p>cathedral<br>G (-3,2), R (3,2)</p>
+          <p>monastery<br>G (-3,2), R (3,2)</p>
         </div>
         <div class="img-block">
           <img src="tobolsk_out.jpg" alt="tobolsk result" width="300">
@@ -128,8 +127,68 @@
     </div>
 
     <!-- Part2 -->
-    ... （保持你之前的 Part2/Part3/Part4 不变）
+    <div class="section" id="part2">
+      <h2>Part2: Pyramid alignment</h2>
+      <h3>Method</h3>
+      <p>
+        This part introduces the concept of an image pyramid to speed up the alignment process for larger images. 
+        By creating a multi-scale representation of the images, we can perform alignment at a coarse scale and then refine it at finer scales. 
+        This approach significantly reduces the computational cost while maintaining alignment accuracy.
+      </p>
+      <p>
+        To be more specific, the image is first downsampled by a factor of 2 to create a lower-resolution version, repeatedly applying downsampling until the size is manageable for a exhaustive search. 
+        A search in the lower-resolution space gives us a coarse shift for alignment, which allows us to initialize the finer alignment at a better position. 
+        A finer search is then done starting at the coarsely shifted channels. Therefore, the total shift in this step will be coarse_shift * downsample_factor + fine_shift. 
+        The base case is when the passed in num_levels is 1, where a single-scale search is done to find the shift at the most coarse level.
+      </p>
+      <h3>Results</h3>
+      <div class="row">
+        <div class="img-block"><img src="church_out.jpg" alt="church" height="180"><p>church<br>G (5,2), R (12,3)</p></div>
+        <div class="img-block"><img src="harvesters_out.jpg" alt="harvesters" height="180"><p>harvesters<br>G (60,17), R (124,13)</p></div>
+        <div class="img-block"><img src="emir_out.jpg" alt="emir" height="180"><p>emir<br>G (49,24), R (107, 40)</p></div>
+        <div class="img-block"><img src="three_generations_out.jpg" alt="three generations" height="180"><p>three_generations<br>G (53,14), R (112,11)</p></div>
+      </div>
+    </div>
+
+    <!-- Part3 -->
+    <div class="section" id="part3">
+      <h2>Part3: Results On My Own Images</h2>
+      <h3>Results</h3>
+      <div class="row">
+        <div class="img-block">
+          <img src="train_out.jpg" alt="train result" width="300">
+          <p>train<br>G (41, 2), R (85, 30)</p>
+        </div>
+        <div class="img-block">
+          <img src="master_out.jpg" alt="master result" width="300">
+          <p>master<br>G (38, 11), R (93, 15)</p>
+        </div>
+        <div class="img-block">
+          <img src="field_out.jpg" alt="field result" width="300">
+          <p>field<br>G (32, 5), R (79, 7)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Part4 -->
+    <div class="section" id="part4">
+      <h2>Part4: Bells & Whistles</h2>
+      <p>
+        Comparing the two images below, the left uses only NCC while the right applies Sobel + NCC. We can see that applying the Sobel operator before alignment often produces more stable and accurate results. The Sobel operator is a simple gradient-based filter commonly used for edge detection. Instead of relying on absolute brightness, it highlights intensity changes, emphasizing structural features like object boundaries and textures while reducing the influence of uneven illumination. As a result, alignment is guided more by the geometry of the scene and becomes less sensitive to exposure differences. 
+      </p>
+      <h3>Comparison</h3>
+      <div class="row">
+        <div class="img-block">
+          <img src="emir_bad_out.jpg" alt="emir bad" height="220">
+          <p>emir_bad</p>
+        </div>
+        <div class="img-block">
+          <img src="emir_out.jpg" alt="emir" height="220">
+          <p>emir_good</p>
+        </div>
+      </div>
+    </div>
+
   </div>
 </body>
 </html>
-
